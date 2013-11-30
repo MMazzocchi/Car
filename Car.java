@@ -47,9 +47,29 @@ public class Car {
     
     public boolean canMakeLight(){
     	// I think we should calculate if it is able to stop in time or not
-    	if(position /* + distance to slow to a stop */ > Metrics.WALK_LEFT)
-    		return false;
-    	return true;
+    	if(position  + tempSpeed*Metrics.WALK_YELLOW  > Metrics.WALK_LEFT){
+    		switch(ahead.carStatus){
+    		case CONSTANT:
+    			if(tempSpeed > ahead.tempSpeed){
+    				// calculate position at which the car will be at the end of the yellow light
+    				if( < Metrics.WALK_RIGHT+13.0)
+        				return false;
+    			}
+    			break;
+    		case DECELERATE:
+    			// calculate position at which the car will be at the end of the yellow light
+    			if( < Metrics.WALK_RIGHT+13.0)
+    				return false;
+    			break;
+    		case ACCELERATE:
+    			// calculate position at which the car will be at the end of the yellow light
+    			if( < Metrics.WALK_RIGHT+13.0)
+    				return false;
+    			break;
+    		}
+    		return true;
+    	}
+    	return false;
     }
     
     public Event reactToLight(Light.LightStatus lightStatus, double currentTime){
