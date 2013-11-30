@@ -12,7 +12,7 @@ public class Car {
     
     public Car(int carId, Origin origin, double t) {
         id = carId;
-        
+        //J Change
         // Calculate the speed of this car and it's initial position
         speed = (Crosswalk.random.Uniform(5)*10.0)+25.0;
         if(origin == Origin.LEFT) {
