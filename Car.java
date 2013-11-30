@@ -40,22 +40,27 @@ public class Car {
     }
     
     public boolean canMakeLight(){
-    	if(position + (tempSpeed * Metrics.WALK_YELLOW) > Metrics.WALK_LEFT)
-    		return true;
-    	return false;
+    	// I think we should calculate if it is able to stop in time or not
+    	if(position /* + distance to slow to a stop */ > Metrics.WALK_LEFT)
+    		return false;
+    	return true;
     }
     
-    public Event reactToLight(Light.LightStatus lightStatus){
-    	if(lightStatus == Light.LightStatus.GREEN){
-    		
-    	}else if(lightStatus == Light.LightStatus.YELLOW){
-    		
-    	}else if(lightStatus == Light.LightStatus.RED){
-    		
+    public Event reactToLight(Light.LightStatus lightStatus, double currentTime){
+    	switch(lightStatus){
+    		case GREEN:
+    			// create event for accelerating
+    			return new CarEvent(currentTime, EventType.CAR_ACCELERATE, id);
+    		case YELLOW:
+    	    	// calculate when it will need to start decelerating
+    			double slowTime = (Metrics.WALK_LEFT /* - distance it takes to stop */ - position)/tempSpeed;
+    	    	// create event for slowing down if it needs to
+    			return new CarEvent(currentTime + slowTime, EventType.CAR_DECELERATE, id);
     	}
-    }
-    
-    public Event changeState(double currentTime){
+    	return null;
+    }   
+/*    
+    public void changeState(CarStatus status){
     	double delay;
     	
     	if(ahead.carStatus == CarStatus.CONSTANT){
@@ -64,6 +69,7 @@ public class Car {
     		// if you wont have to do anything
     		
     	}else if(ahead.carStatus == CarStatus.STOP){
+    		// calculate when you need to decelerate
     		
     	}else if(ahead.carStatus == CarStatus.ACCELERATE){
     		// possibly accelerate to maxSpeed
@@ -74,9 +80,8 @@ public class Car {
     		// possibly decelerate to a constant speed
     		
     	}
-    	return new CarEvent(currentTime + delay, EventType.CAR_STATUS, id);
     }
-    
+*/   
     //Return an event signifying when this car exits the simulation
     public Event exitEvent(double currentTime) {
         double stopPoint;
