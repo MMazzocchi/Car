@@ -71,7 +71,6 @@ public class Crosswalk {
 		case CAR_SPAWN_L:
 			if(currentTime < duration) {
 				id = carList.addCarL(currentTime); //Create a new car
-				eventList.add(carList.get(id).crossArrival(currentTime)); //Add an event for when it arrives at the light
 
 				eventList.add(new Event(random.Exponential(0) + currentTime, EventType.CAR_SPAWN_L)); // Have another car come
 			}
@@ -81,8 +80,7 @@ public class Crosswalk {
 		case CAR_SPAWN_R:
 			if(currentTime < duration) {
 				id = carList.addCarR(currentTime); //Create a new car
-				eventList.add(carList.get(id).crossArrival(currentTime)); //Add an event for when it arrives at the light
-
+				
 				eventList.add(new Event(random.Exponential(1) + currentTime, EventType.CAR_SPAWN_R)); // Have another car come
 				stats.addCar();
 			}

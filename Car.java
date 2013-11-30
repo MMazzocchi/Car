@@ -1,6 +1,3 @@
-import Light.LightStatus;
-
-
 
 public class Car {
     public enum Origin {LEFT, RIGHT};
