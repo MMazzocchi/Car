@@ -14,7 +14,8 @@ public class Crosswalk {
 
 	private Light light;
 	private double dontWalkTime;
-	private Car carAtLight;
+	private Car carAtLightL;
+	private Car carAtLightR;
 	private ArrayList<Integer> pedsAtWalk;
 
 	private Statistics stats;
@@ -26,7 +27,9 @@ public class Crosswalk {
 		duration = time;
 
 		light = new Light();
-		carAtLight = null;
+		carAtLightL = null;
+		carAtLightR = null;
+
 		pedsAtWalk = new ArrayList<Integer>();
 		dontWalkTime = 0.0;
 
@@ -194,20 +197,30 @@ public class Crosswalk {
 				eventList.add(newEvent);
 			}
 
-			//If the light just became green, have all the cars waiting go through the light.
 			switch(light.getLightStatus()) {
+			
 			case GREEN:
 				//Signal to the car waiting at the light that it is green
-				if(carAtLight != null)
-					carAtLight.reactToLight(light.getLightStatus());
+				if(carAtLightR != null)
+					carAtLightR.reactToLight(light.getLightStatus());
+				
+				if(carAtLightL != null)
+					carAtLightL.reactToLight(light.getLightStatus());
 				
 				break;
 			case YELLOW:
-				//When the light becomes yellow, we need to:
-				//    -find the first car that will have to wait at the light
-				//    -signal to that car that the light is yellow
 				
-				carAtLight.reactToLight(light.getLightStatus());
+				//Find the first car from either side that will have to stop
+				carAtLightL = carList.findCarAtLightL();
+				carAtLightR = carList.findCarAtLightR();
+
+				//Tell those cars to react to the light
+				if(carAtLightL != null)
+					carAtLightL.reactToLight(light.getLightStatus());
+				
+				if(carAtLightR != null)
+					carAtLightR.reactToLight(light.getLightStatus());
+				
 				break;
 			case RED:
 				//If the crosswalk sign just became "Walk", have all the pedestrians waiting attempt to cross.
