@@ -6,6 +6,7 @@ public class Car {
     private int id;
     private CarStatus carStatus;
     private Car ahead;
+    private Car behind;
     
     private double acceleration; // ft/min
     private double tempSpeed; // ft/min
@@ -37,6 +38,11 @@ public class Car {
     
     public void follow(Car c) {
         ahead = c;
+        c.setBehind(this);
+    }
+    
+    public void setBehind(Car c) {
+    	behind = c;
     }
     
     public boolean canMakeLight(){
@@ -63,23 +69,25 @@ public class Car {
     public void changeState(CarStatus status){
     	double delay;
     	
-    	if(ahead.carStatus == CarStatus.CONSTANT){
+    	switch(ahead.carStatus) {
+    	case CONSTANT:
     		// if you will catch up and have to slow down
     		// 
     		// if you wont have to do anything
     		
-    	}else if(ahead.carStatus == CarStatus.STOP){
-    		// calculate when you need to decelerate
+    	case STOP:
     		
-    	}else if(ahead.carStatus == CarStatus.ACCELERATE){
+    	case ACCELERATE:
     		// possibly accelerate to maxSpeed
     		// possibly accelerate to constant speed of car in front
     		// possibly accelerate and then have to decelerate
-    	}else if(ahead.carStatus == CarStatus.DECELERATE){
+    	case DECELERATE: 
     		// possibly decelerate to a stop
     		// possibly decelerate to a constant speed
     		
     	}
+
+    	return null;
     }
 */   
     //Return an event signifying when this car exits the simulation
