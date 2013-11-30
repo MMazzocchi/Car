@@ -1,6 +1,5 @@
 
 public class Car {
-    public enum Origin {LEFT, RIGHT};
     public enum CarStatus {CONSTANT, ACCELERATE, DECELERATE, STOP};
     
     private int id;
@@ -16,19 +15,14 @@ public class Car {
     private double arrivalTime;
     private double optimumExit;
     
-    public Car(int carId, Origin origin, double arrivalTime) {
+    public Car(int carId, double arrivalTime) {
         id = carId;
         this.arrivalTime = arrivalTime;
         carStatus = CarStatus.CONSTANT;
         
         // Calculate the speed of this car and it's initial position
         maxSpeed = (Crosswalk.random.Uniform(5)*10.0)+25.0;
-        if(origin == Origin.LEFT) {
             position = 0;
-        } else {
-            maxSpeed *= -1;
-            position = Metrics.STREET_LENGTH;
-        }
         
         maxSpeed = (maxSpeed * 5280)/60.0;
         tempSpeed = maxSpeed;
@@ -109,7 +103,23 @@ public class Car {
 
     	return null;
     }
-*/   
+*/
+    
+    public Event processStop(double xf) {
+    	//Find acceleration distance
+    	double d_a = (xf-position) - ((((tempSpeed*tempSpeed)/(2*acceleration))+(xf-position))/2);
+    	if(d_a <= 0) {
+    		//Don't accelerate; start de-accelerating
+    	} else {
+    		//Find the time it will take to accelerate this distance
+    		double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
+    		
+    		//Set status to accelerate. Return an event at currentTime + time where we re-evaluate
+    	}
+    	
+    	return null;
+    }
+
     //Return an event signifying when this car exits the simulation
     public Event exitEvent(double currentTime) {
         double stopPoint;

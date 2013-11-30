@@ -21,7 +21,7 @@ public class CarList {
     public int addCarL(double time) {
         int newId = id;
         id++;
-        Car c = new Car(newId, Car.Origin.LEFT, time);
+        Car c = new Car(newId, time);
         c.follow(left.getLast());
         left.add(c);
         ids.put(newId, c);
@@ -32,7 +32,7 @@ public class CarList {
     public int addCarR(double time) {
         int newId = id;
         id++;
-        Car c = new Car(newId, Car.Origin.RIGHT, time);
+        Car c = new Car(newId, time);
         c.follow(right.getLast());
         right.add(c);
         ids.put(newId, c);
