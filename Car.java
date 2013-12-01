@@ -28,7 +28,10 @@ public class Car {
 
 		maxSpeed = (maxSpeed * 5280)/60.0;
 		tempSpeed = maxSpeed;
-		acceleration = (acceleration * 5280)/60.0;
+		
+		acceleration = (Crosswalk.random.Uniform(10)*5.0)+7.0;
+		
+		acceleration = (acceleration * 5280)/(60.0*60.0);
 		optimumExit = this.arrivalTime + (Metrics.STREET_LENGTH/maxSpeed);
 	}
 
@@ -205,23 +208,20 @@ public class Car {
 
 		} else {
 			//Find acceleration distance
-			double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2*acceleration))+(xf-position))/2.0);
+			double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2.0*acceleration))+(xf-position))/2.0);
+			
+			P.p("Acceleration distance: "+d_a);
 			if(d_a <= 0) {
 				//Don't accelerate; start de-accelerating. Find the time it will take.
 				double d_d = (xf - position) - d_a;
+				P.p("Deceleration distance "+d_d);
 				double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_d)))/acceleration;
-
-				//Calculate the time when we hit our max speed
-				double time_v = (maxSpeed - tempSpeed)/acceleration;
-
-				//Use whichever comes sooner
-				if(time_v < time) {
-					time = time_v;
-				}
 
 				//Set status to de-accelerate.
 				carStatus = CarStatus.DECELERATE;
 				P.p("Decelerating");
+				
+				P.p("Time til stop: "+ time);
 
 				//Return an event at currentTime + time where we re-evaluate
 				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
@@ -230,6 +230,14 @@ public class Car {
 				//Find the time it will take to accelerate this distance
 				double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
 
+				//Calculate the time when we hit our max speed
+				double time_v = (maxSpeed - tempSpeed)/acceleration;
+
+				//Use whichever comes sooner
+				if(time_v < time) {
+					time = time_v;
+				}
+				
 				//Set status to accelerate.
 				carStatus = CarStatus.ACCELERATE;
 				P.p("Accelerating");

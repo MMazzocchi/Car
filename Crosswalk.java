@@ -57,6 +57,11 @@ public class Crosswalk {
 			Event currentEvent = eventList.poll();
 			currentTime = currentEvent.getTime();
 			processEvent(currentEvent);
+			try {
+				//Thread.sleep(1000);
+			} catch (Exception e) {
+				P.p("dasdfasdfasdf");
+			}
 		}
 
 		//Print statistics
