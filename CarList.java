@@ -27,6 +27,7 @@ public class CarList {
         
         left.add(c);
         ids.put(newId, c);
+        c.changeState(time);
         return newId;
     }
     
@@ -40,6 +41,7 @@ public class CarList {
         
         right.add(c);
         ids.put(newId, c);
+        c.changeState(time);
         return newId;
     }
     

@@ -22,6 +22,8 @@ public class Car {
 		
 		id = carId;
 		this.arrivalTime = arrivalTime;
+		state_time = arrivalTime;
+		
 		carStatus = CarStatus.CONSTANT;
 
 		// Calculate the speed of this car and it's initial position
@@ -181,6 +183,7 @@ public class Car {
 					//Take whichever happens first; either we hit max speed or we exit
 					if(exitTime < acc_time)
 						acc_time = exitTime;
+					
 					Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
 					Crosswalk.eventList.add(e);
 				}
@@ -260,18 +263,24 @@ public class Car {
 				if(time_v < time) {
 					time = time_v;
 				}
-				
+
 				if(time != 0) {
-				//Set status to accelerate.
-				carStatus = CarStatus.ACCELERATE;
-				P.p("Accelerating");
-				//Return an event at currentTime + time where we re-evaluate
-				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
-				Crosswalk.eventList.add(e);
+					//Set status to accelerate.
+					carStatus = CarStatus.ACCELERATE;
+					P.p("Accelerating");
+
 				} else {
 					P.p("Keeping constant speed (at max speed)");
 					carStatus = CarStatus.CONSTANT;
+					double decelPt = xf - stopDistance();
+					time = (decelPt - position)/tempSpeed;
+					P.p("DecelPt: "+decelPt);
+					P.p("time: "+time);
 				}
+				
+				//Return an event at currentTime + time where we re-evaluate
+				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
+				Crosswalk.eventList.add(e);
 			}
 		}
 	}
