@@ -127,6 +127,10 @@ public class Car {
 				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 			}
 		}
+		
+		if(behind != null) {
+			behind.changeState(currentTime);
+		}
 	}
 
 	//Determine the best move if our goal is to:
