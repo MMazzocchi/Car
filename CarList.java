@@ -74,6 +74,7 @@ public class CarList {
     }
     
     public void remove(int id) {
+    	P.p("Car "+id+" requested removal");
     	if((right.size() > 0) && (id == right.getFirst().getId())){
     		right.pop();
     	}else if((left.size() > 0) && (id == left.getFirst().getId())){
@@ -82,6 +83,8 @@ public class CarList {
     }
     
     public int size() {
-    	return ids.size();
+    	P.p("right size: "+ right.size());
+    	P.p("left size: "+left.size());
+    	return right.size() + left.size();
     }
 }

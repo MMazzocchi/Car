@@ -94,10 +94,6 @@ public class Car {
 		
 		calcCurrentState(currentTime);
 		
-		P.p("CAN_MAKE_LIGHT");
-		P.p("Projected position: "+(position+strategyDistance(Metrics.WALK_YELLOW)));
-		P.p("Boundary: "+Metrics.WALK_RIGHT+20.0);
-		
 		if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
 			P.p(id + " can make light");
 			return true;
@@ -236,10 +232,6 @@ public class Car {
 			double a = acceleration;
 			double d_a = (((vf_2 - vi_2)/(2.0*a))+d_tot)/2.0;
 			
-			P.p("Ei="+(.5*vi_2)+"*m");
-			P.p("Ef=0");
-			P.p("Ei/(m*a)="+((.5*vi_2)/a));
-			
 			
 			P.p("Acceleration distance: "+d_a);
 			if(d_a <= 0) {
@@ -269,13 +261,17 @@ public class Car {
 					time = time_v;
 				}
 				
+				if(time != 0) {
 				//Set status to accelerate.
 				carStatus = CarStatus.ACCELERATE;
 				P.p("Accelerating");
-
 				//Return an event at currentTime + time where we re-evaluate
 				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
 				Crosswalk.eventList.add(e);
+				} else {
+					P.p("Keeping constant speed (at max speed)");
+					carStatus = CarStatus.CONSTANT;
+				}
 			}
 		}
 	}
