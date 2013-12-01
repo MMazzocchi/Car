@@ -93,19 +93,19 @@ public class Car {
 		tempSpeed = strategySpeed(currentTime - state_time);
 	}
 
-	public Event reactToLight(Light.LightStatus lightStatus, double currentTime){
+	public void reactToLight(Light.LightStatus lightStatus, double currentTime){
 		switch(lightStatus){
 		case GREEN:
 			// create event for accelerating
-			return changeState(currentTime);
+			changeState(currentTime);
 		case YELLOW:
 			// calculate when it will need to start decelerating
-			return processSpeed(Metrics.WALK_LEFT, 0, currentTime);
+			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
+		//	behind.changeState(currentTime);
 		}
-		return null;
 	}   
 
-	public Event changeState(double currentTime){
+	public void changeState(double currentTime){
 
 		double stopPoint;
 		// if you will catch up and have to slow down
@@ -119,16 +119,14 @@ public class Car {
 				extraDist = ahead.stopDistance() - stopDistance();
 			}
 			stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
-			return processSpeed(stopPoint, ahead.tempSpeed, currentTime);
+			processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 		}
-		return null;
-
 	}
 
 	//Determine the best move if our goal is to:
 	//	- reach xf at the most efficient rate possible
 	//	- have the speed vf once we reach xf
-	public Event processSpeed(double xf, double vf, double currentTime) {
+	public void processSpeed(double xf, double vf, double currentTime) {
 		if(xf <= position && vf == 0) {
 			//Stop here.
 			carStatus = CarStatus.STOP;
@@ -159,8 +157,8 @@ public class Car {
 				carStatus = CarStatus.DECELERATE;
 
 				//Return an event at currentTime + time where we re-evaluate
-				return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
-
+				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+				Crosswalk.eventList.add(e);
 			} else {
 				//Find the time it will take to accelerate this distance
 				double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
@@ -169,10 +167,10 @@ public class Car {
 				carStatus = CarStatus.ACCELERATE;
 
 				//Return an event at currentTime + time where we re-evaluate
-				return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+				Crosswalk.eventList.add(e);
 			}
 		}
-		return null;
 	}
 
 	//Return an event signifying when this car exits the simulation

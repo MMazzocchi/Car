@@ -8,7 +8,7 @@ public class Crosswalk {
 	private int duration;
 	public double currentTime;
 
-	private EventQueue eventList;
+	public static EventQueue eventList;
 	private CarList carList;
 	private PedList pedList;
 
@@ -69,6 +69,10 @@ public class Crosswalk {
 		int id;
 
 		switch(event.getType()) {
+		
+		case CAR_REEVALUATE:
+			
+			break;
 
 		//Spawn a car on the left
 		case CAR_SPAWN_L:
