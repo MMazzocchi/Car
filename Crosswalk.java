@@ -66,21 +66,28 @@ public class Crosswalk {
 
 	// Process this event
 	public void processEvent(Event event) {
+		P.p("Processing event at time "+currentTime);
+		
 		int id;
 
 		switch(event.getType()) {
 		
 		case CAR_REEVALUATE:
 			id = ((CarEvent)event).getId();
+			P.p("Reevaluating car "+id+" at time"+currentTime);
 			if(((carAtLightL == null) || (id != carAtLightL.getId())) && 
 			   ((carAtLightR == null) || (id != carAtLightR.getId()))) {
 				carList.get(id).changeState(currentTime);
+			} else {
+				P.p("Reevaluation rejected; car is at light.");
 			}
 			break;
 
 		//Spawn a car on the left
-		case CAR_SPAWN_L:
+		case CAR_SPAWN_L:			
 			if(currentTime < duration) {
+				P.p("Spawning a car on the left at time "+currentTime);
+
 				id = carList.addCarL(currentTime); //Create a new car
 
 				eventList.add(new Event(random.Exponential(0) + currentTime, EventType.CAR_SPAWN_L)); // Have another car come
@@ -90,10 +97,10 @@ public class Crosswalk {
 			//Spawn a car on the right
 		case CAR_SPAWN_R:
 			if(currentTime < duration) {
+				P.p("Spawning a car on the right at time "+currentTime);
 				id = carList.addCarR(currentTime); //Create a new car
 				
 				eventList.add(new Event(random.Exponential(1) + currentTime, EventType.CAR_SPAWN_R)); // Have another car come
-				stats.addCar();
 			}
 			break;
 
@@ -101,6 +108,8 @@ public class Crosswalk {
 		case PED_SPAWN_L:
 			if(currentTime < duration) {
 				id = pedList.addPedL(); // Create pedestrian
+				P.p("Ped "+id+" spawned on left at "+currentTime);
+
 				eventList.add(pedList.get(id).crossArrival(currentTime)); //Add an event for when they arrive at the crosswalk
 
 				eventList.add(new Event(random.Exponential(2) + currentTime, EventType.PED_SPAWN_L)); // Have another pedestrian enter
@@ -112,6 +121,8 @@ public class Crosswalk {
 		case PED_SPAWN_R:
 			if(currentTime < duration) {
 				id = pedList.addPedR(); // Create Pedestrian
+				P.p("Ped "+id+" spawned on right at "+currentTime);
+
 				eventList.add(pedList.get(id).crossArrival(currentTime)); //Add an event for when they arrive at the crosswalk
 
 				eventList.add(new Event(random.Exponential(3) + currentTime, EventType.PED_SPAWN_R)); // Have another pedestrian enter soon
@@ -122,17 +133,20 @@ public class Crosswalk {
 			//A car has reached the end of the street; it exits the simulation
 		case CAR_EXIT:
 			id = ((CarEvent)event).getId();
+			P.p("Car "+id+" exited at "+currentTime);
 			carList.remove(id);
 			break;
 
 			//Process a pedestrian arriving at the light
 		case PED_AT_WALK:
 			id = ((PedEvent)event).getId();
+			P.p("Ped "+id+" arrived at walk at "+currentTime);
 
 			//If the "Walk" sign is showing, attempt to cross the street (this could fail, since we might not have enough time)
 			if(light.getWalkStatus() == Light.WalkStatus.WALK) {
 				Event newEvent = pedList.get(id).exitEvent(currentTime, dontWalkTime);
 				if(newEvent != null) {
+					P.p("Ped "+id+" began crossing.");
 					eventList.add(newEvent);
 				}
 			} else {
@@ -163,6 +177,7 @@ public class Crosswalk {
 			//A pedestrian has reached the end of the crosswalk; they exit the simulation.
 		case PED_EXIT:
 			id = ((PedEvent)event).getId();
+			P.p("Ped "+id+" exited the simulation.");
 			stats.addPedWaitTime(pedList.get(id).waitTime(currentTime));
 			pedList.remove(id);
 			break;
@@ -174,6 +189,7 @@ public class Crosswalk {
 			id = ((PedEvent)event).getId();
 			if(pedList.get(id) != null) {
 				if(!pedList.get(id).hasCrossed()) {
+					P.p("Ped "+id+" pressed the button.");
 					Event newEvent = light.pressButton(currentTime);
 					if(newEvent != null) {
 						eventList.add(newEvent);
@@ -182,8 +198,9 @@ public class Crosswalk {
 			}
 			break;
 
-			//Process a light change.
+		//Process a light change.
 		case LIGHT_CHANGE:
+			P.p("The light has changed at "+currentTime);
 			Event newEvent = light.change(currentTime);
 			if(newEvent != null) {
 				eventList.add(newEvent);
@@ -194,11 +211,13 @@ public class Crosswalk {
 			case GREEN:
 				//Signal to the car waiting at the light that it is green
 				if(carAtLightR != null) {
+					P.p("Telling the car waiting on the right to react to the green.");
 					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
 					carAtLightR = null;
 				}
 				
 				if(carAtLightL != null) {
+					P.p("Telling the car waiting on the left to react to the green.");
 					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
 					carAtLightL = null;
 				}
@@ -211,14 +230,20 @@ public class Crosswalk {
 				carAtLightR = carList.findCarAtLightR();
 
 				//Tell those cars to react to the light
-				if(carAtLightL != null)
+				if(carAtLightL != null) {
+					P.p("Found car on left "+carAtLightL.getId()+", telling it to react to the yellow.");
 					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
+				}
 				
-				if(carAtLightR != null)
+				if(carAtLightR != null) {
+					P.p("Found car on right "+carAtLightR.getId()+", telling it to react to the yellow.");
 					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
-				
+				}
+					
 				break;
 			case RED:
+				P.p("Telling all the pedestrians to walk at time "+currentTime);
+				
 				//If the crosswalk sign just became "Walk", have all the pedestrians waiting attempt to cross.
 				dontWalkTime = currentTime + Metrics.WALK_RED; //Calculate the time when the crosswalk will flip back to "Don't Walk"
 				for(int i=0; i<pedsAtWalk.size(); i++) {
@@ -234,17 +259,9 @@ public class Crosswalk {
 				break;
 			}
 
-/*			if(light.getLightStatus() == Light.LightStatus.GREEN) {
-				for(int carId : carsAtLight) {
-					stats.addCarWaitTime(carList.get(carId).waitTime(currentTime));
-					eventList.add(carList.get(carId).exitEvent(currentTime));
-				}
-				carsAtLight.clear();
-			}
-			*/
 			break;
 		default:
-			System.out.println("ERROR: UNPROCESSED EVENT AT TIME "+currentTime+" OF TYPE "+event.getType());
+			P.p("ERROR: UNPROCESSED EVENT AT TIME "+currentTime+" OF TYPE "+event.getType());
 			System.exit(-1);
 			break;
 		}
