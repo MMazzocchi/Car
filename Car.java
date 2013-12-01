@@ -88,34 +88,33 @@ public class Car {
    
     public Event changeState(CarStatus status, double currentTime){
     	
+    	double stopPoint;
+    	Event nextEvent;
+    	
     	switch(ahead.carStatus) {
-    	case CONSTANT:
+    	case STOP:
+    		//The car ahead of us is stopped.
+    		stopPoint = ahead.getPostion() - Metrics.MINIMUM_STOP;
+    		nextEvent = processSpeed(stopPoint, 0, currentTime);
+    		return nextEvent;
+    		
+    	default:
     		// if you will catch up and have to slow down
     		// 
     		// if you wont have to do anything
-    		if(tempSpeed > ahead.tempSpeed){
-    			double time = (ahead.position-position - (20.0 + acceleration))/(tempSpeed-ahead.tempSpeed);
-    			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+    		if(ahead.tempSpeed > maxSpeed){
+    			carStatus = CarStatus.ACCELERATE;
+    		} else {
+    			double extraDist = 0;
+    			if(ahead.acceleration > acceleration) {
+    				extraDist = ahead.stopDistance() - stopDistance();
+    			}
+    			stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
+    			return processSpeed(stopPoint, ahead.tempSpeed, currentTime);
     		}
     		return null;
-    		
-    	case STOP:
-    		//The car ahead of us is stopped.
-    		double stopPoint = ahead.getPostion() - Metrics.MINIMUM_STOP;
-    		Event nextEvent = processSpeed(stopPoint, 0, currentTime);
-    		return nextEvent;
-    		
-    	case ACCELERATE:
-    		// possibly accelerate to maxSpeed
-    		// possibly accelerate to constant speed of car in front
-    		// possibly accelerate and then have to decelerate
-    	case DECELERATE: 
-    		// possibly decelerate to a stop
-    		// possibly decelerate to a constant speed
-    		
     	}
     	
-    	return null;
     }
 
     //Determine the best move if our goal is to:
@@ -126,8 +125,11 @@ public class Car {
     		//Stop here.
     		carStatus = CarStatus.STOP;
 
-    	} else if(xf <= position && vf == tempSpeed) { 
+    	} else if((xf <= position && vf == tempSpeed) || tempSpeed >= maxSpeed) {
+    		//If we've reached the speed at the point we wanted, hold this speed.
+    		//If we've reached our max speed, hold this speed.
     		carStatus = CarStatus.CONSTANT;
+    		
     	} else {
     		//Find acceleration distance
     		double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2*acceleration))+(xf-position))/2.0);
@@ -136,6 +138,14 @@ public class Car {
     			double d_d = (xf - position) - d_a;
     			double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_d)))/acceleration;
 
+    			//Calculate the time when we hit our max speed
+    			double time_v = (maxSpeed - tempSpeed)/acceleration;
+    			
+    			//Use whichever comes sooner
+    			if(time_v < time) {
+    				time = time_v;
+    			}
+    			
     			//Set status to de-accelerate.
     			carStatus = CarStatus.DECELERATE;
 
@@ -167,6 +177,12 @@ public class Car {
         double stopTime = (stopPoint - position)/tempSpeed;
         position = stopPoint;
         return new CarEvent(currentTime + stopTime, EventType.CAR_EXIT, id);
+    }
+    
+    //Return the distance needed to stop right now
+    public double stopDistance() {
+    	double time = tempSpeed/acceleration;
+    	return (-.5*acceleration*time*time) + (tempSpeed*time);
     }
     
     public double getPostion() {
