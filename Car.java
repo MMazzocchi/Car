@@ -39,28 +39,29 @@ public class Car {
     	behind = c;
     }
     
+    public double strategyDistance(double time){
+    	double distance = 0.0;
+    	switch(carStatus){
+	    	case ACCELERATE:
+	    		distance = 0.5*(acceleration)*(time*time) + tempSpeed*time;
+	    		break;
+	    	case DECELERATE:
+	    		distance = 0.5*(-acceleration)*(time*time) + tempSpeed*time;
+	    		break;
+	    	case STOP:
+	    		distance = 0.0;
+	    		break;
+	    	case CONSTANT:
+	    		distance = tempSpeed*time;
+	    		break;
+    	}
+    	
+    	return distance;
+    }
+    
     public boolean canMakeLight(){
-    	// I think we should calculate if it is able to stop in time or not
-    	if(position  + tempSpeed*Metrics.WALK_YELLOW  > Metrics.WALK_LEFT){
-    		switch(ahead.carStatus){
-    		case CONSTANT:
-    			if(tempSpeed > ahead.tempSpeed){
-    				// calculate position at which the car will be at the end of the yellow light
-    				if( < Metrics.WALK_RIGHT+13.0)
-        				return false;
-    			}
-    			break;
-    		case DECELERATE:
-    			// calculate position at which the car will be at the end of the yellow light
-    			if( < Metrics.WALK_RIGHT+13.0)
-    				return false;
-    			break;
-    		case ACCELERATE:
-    			// calculate position at which the car will be at the end of the yellow light
-    			if( < Metrics.WALK_RIGHT+13.0)
-    				return false;
-    			break;
-    		}
+    	
+    	if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
     		return true;
     	}
     	return false;
