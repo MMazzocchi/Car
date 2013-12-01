@@ -70,7 +70,11 @@ public class CarList {
     }
     
     public void remove(int id) {
-    	ids.remove(id);
+    	if(id == ((CarList) right).get(0).getId()){
+    		right.pop();
+    	}else{
+    		left.pop();
+    	}
     }
     
     public int size() {

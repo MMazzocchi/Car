@@ -15,6 +15,7 @@ public class Car {
 	private double arrivalTime;
 	private double state_time;
 	private double optimumExit;
+	private double actualExit;
 
 	public Car(int carId, double arrivalTime) {
 		id = carId;
@@ -167,7 +168,7 @@ public class Car {
 				carStatus = CarStatus.DECELERATE;
 
 				//Return an event at currentTime + time where we re-evaluate
-				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
 				Crosswalk.eventList.add(e);
 			} else {
 				//Find the time it will take to accelerate this distance
@@ -177,7 +178,7 @@ public class Car {
 				carStatus = CarStatus.ACCELERATE;
 
 				//Return an event at currentTime + time where we re-evaluate
-				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
 				Crosswalk.eventList.add(e);
 			}
 		}
@@ -185,15 +186,8 @@ public class Car {
 
 	//Return an event signifying when this car exits the simulation
 	public Event exitEvent(double currentTime) {
-		double stopPoint;
-		if(tempSpeed < 0) {
-			stopPoint = 0;
-		} else {
-			stopPoint = Metrics.STREET_LENGTH;
-		}
-		double stopTime = (stopPoint - position)/tempSpeed;
-		position = stopPoint;
-		return new CarEvent(currentTime + stopTime, EventType.CAR_EXIT, id);
+		actualExit = currentTime;
+		return new CarEvent(currentTime, EventType.CAR_EXIT, id);
 	}
 
 	//Return the distance needed to stop right now
@@ -204,5 +198,9 @@ public class Car {
 
 	public double getPostion() {
 		return position;
+	}
+
+	public int getId() {
+		return id;
 	}
 }
