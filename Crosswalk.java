@@ -261,7 +261,7 @@ public class Crosswalk {
 
 			break;
 		default:
-			System.out.println("ERROR: UNPROCESSED EVENT AT TIME "+currentTime+" OF TYPE "+event.getType());
+			P.p("ERROR: UNPROCESSED EVENT AT TIME "+currentTime+" OF TYPE "+event.getType());
 			System.exit(-1);
 			break;
 		}
