@@ -102,7 +102,8 @@ public class Car {
 		case YELLOW:
 			// calculate when it will need to start decelerating
 			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
-		//	behind.changeState(currentTime);
+			if(behind != null) 
+				behind.changeState(currentTime);
 		}
 	}   
 
