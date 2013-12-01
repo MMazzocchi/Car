@@ -93,6 +93,11 @@ public class Car {
     		// if you will catch up and have to slow down
     		// 
     		// if you wont have to do anything
+    		if(tempSpeed > ahead.tempSpeed){
+    			double time = (ahead.position-position - (20.0 + acceleration))/(tempSpeed-ahead.tempSpeed);
+    			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+    		}
+    		return null;
     		
     	case STOP:
     		//The car ahead of us is stopped. Process that.
