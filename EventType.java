@@ -5,6 +5,7 @@ public enum EventType {
     CAR_AT_LIGHT,
     CAR_ACCELERATE,
     CAR_DECELERATE,
+    CAR_REEVALUATE,
     CAR_STOP,
     CAR_CONSTANT,
     PED_SPAWN_L,

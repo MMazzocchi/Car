@@ -10,4 +10,5 @@ public class Metrics {
     public static final double STREET_WIDTH = 46.0;
     public static final double WALK_YELLOW = 8.0/60.0;
     public static final double WALK_RED = 12.0/60.0;
+    public static final double MINIMUM_STOP = 20.0;
 }

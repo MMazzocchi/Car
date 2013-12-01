@@ -79,9 +79,8 @@ public class Car {
     	}
     	return null;
     }   
-/*    
-    public void changeState(CarStatus status){
-    	double delay;
+   
+    public Event changeState(CarStatus status, double currentTime){
     	
     	switch(ahead.carStatus) {
     	case CONSTANT:
@@ -90,6 +89,10 @@ public class Car {
     		// if you wont have to do anything
     		
     	case STOP:
+    		//The car ahead of us is stopped. Process that.
+    		double stopPoint = ahead.getPostion() + Metrics.MINIMUM_STOP;
+    		Event nextEvent = processStop(stopPoint, currentTime);
+    		return nextEvent;
     		
     	case ACCELERATE:
     		// possibly accelerate to maxSpeed
@@ -100,23 +103,42 @@ public class Car {
     		// possibly decelerate to a constant speed
     		
     	}
-
+    	
     	return null;
     }
-*/
+
     
-    public Event processStop(double xf) {
-    	//Find acceleration distance
-    	double d_a = (xf-position) - ((((tempSpeed*tempSpeed)/(2*acceleration))+(xf-position))/2);
-    	if(d_a <= 0) {
-    		//Don't accelerate; start de-accelerating
+    public Event processStop(double xf, double currentTime) {
+    	if(xf == position) {
+    		//Stop here.
+    		carStatus = CarStatus.STOP;
+
     	} else {
-    		//Find the time it will take to accelerate this distance
-    		double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
-    		
-    		//Set status to accelerate. Return an event at currentTime + time where we re-evaluate
+    		//Find acceleration distance
+    		double d_a = (xf-position) - ((((tempSpeed*tempSpeed)/(2*acceleration))+(xf-position))/2);
+    		if(d_a <= 0) {
+    			//Don't accelerate; start de-accelerating. Find the time it will take.
+    			double d_d = (xf - position) - d_a;
+    			double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_d)))/acceleration;
+    			
+    			//Set status to de-accelerate.
+    			carStatus = CarStatus.DECELERATE;
+
+    			//Return an event at currentTime + time where we re-evaluate
+    			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+    			
+    		} else {
+    			//Find the time it will take to accelerate this distance
+    			double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
+
+    			//Set status to accelerate.
+    			carStatus = CarStatus.ACCELERATE;
+    			
+    			//Return an event at currentTime + time where we re-evaluate
+    			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
+    		}
     	}
-    	
+
     	return null;
     }
 
@@ -131,5 +153,9 @@ public class Car {
         double stopTime = (stopPoint - position)/tempSpeed;
         position = stopPoint;
         return new CarEvent(currentTime + stopTime, EventType.CAR_EXIT, id);
+    }
+    
+    public double getPostion() {
+    	return position;
     }
 }
