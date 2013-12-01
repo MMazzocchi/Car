@@ -6,6 +6,7 @@ public class Car {
 	private CarStatus carStatus;
 	private Car ahead;
 	private Car behind;
+	private Car saved;
 
 	private double acceleration; // ft/min^2
 	private double tempSpeed; // ft/min
@@ -16,8 +17,9 @@ public class Car {
 	private double state_time;
 	private double optimumExit;
 	private double actualExit;
-
-	public Car(int carId, double arrivalTime) {
+	
+	public Car(int carId, double arrivalTime) {	
+		
 		id = carId;
 		this.arrivalTime = arrivalTime;
 		carStatus = CarStatus.CONSTANT;
@@ -30,8 +32,9 @@ public class Car {
 		tempSpeed = maxSpeed;
 		
 		acceleration = (Crosswalk.random.Uniform(10)*5.0)+7.0;
-		
-		acceleration = (acceleration * 5280)/(60.0*60.0);
+	
+		acceleration = acceleration * 60 * 60;
+//		acceleration = (acceleration * 5280)/(60.0*60.0);
 		optimumExit = this.arrivalTime + (Metrics.STREET_LENGTH/maxSpeed);
 	}
 
@@ -87,7 +90,14 @@ public class Car {
 		return speed;
 	}
 
-	public boolean canMakeLight(){
+	public boolean canMakeLight(double currentTime){
+		
+		calcCurrentState(currentTime);
+		
+		P.p("CAN_MAKE_LIGHT");
+		P.p("Projected position: "+(position+strategyDistance(Metrics.WALK_YELLOW)));
+		P.p("Boundary: "+Metrics.WALK_RIGHT+20.0);
+		
 		if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
 			P.p(id + " can make light");
 			return true;
@@ -99,20 +109,32 @@ public class Car {
 	public void calcCurrentState(double currentTime){
 		position = position + strategyDistance(currentTime - state_time);
 		tempSpeed = strategySpeed(currentTime - state_time);
+		state_time = currentTime;
 		P.p("calcCurrentState being executed, position: " + position + ", tempSpeed: " + tempSpeed);
 	}
 
 	public void reactToLight(Light.LightStatus lightStatus, double currentTime){
+		
+		calcCurrentState(currentTime);
+		
+		P.p("Current position: "+position);
+		
 		P.p("Reacting to lightStatus: " + lightStatus);
 		switch(lightStatus){
 		case GREEN:
 			P.p("lightStatus is green");
+			ahead = saved;
 			// create event for accelerating
 			changeState(currentTime);
 		case YELLOW:
 			P.p("lightStatus is yellow");
 			// calculate when it will need to start decelerating
-			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
+//			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
+
+			saved = ahead;
+			ahead = Crosswalk.stopped;
+			changeState(currentTime);
+			
 			if(behind != null) 
 				behind.changeState(currentTime);
 		}
@@ -208,7 +230,16 @@ public class Car {
 
 		} else {
 			//Find acceleration distance
-			double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2.0*acceleration))+(xf-position))/2.0);
+			double d_tot = xf - position;
+			double vf_2 = vf*vf;
+			double vi_2 = tempSpeed*tempSpeed;
+			double a = acceleration;
+			double d_a = (((vf_2 - vi_2)/(2.0*a))+d_tot)/2.0;
+			
+			P.p("Ei="+(.5*vi_2)+"*m");
+			P.p("Ef=0");
+			P.p("Ei/(m*a)="+((.5*vi_2)/a));
+			
 			
 			P.p("Acceleration distance: "+d_a);
 			if(d_a <= 0) {
@@ -269,8 +300,18 @@ public class Car {
 	public int getId() {
 		return id;
 	}
+
+	public CarStatus getState() {
+		return carStatus;
+	}
 	
 	public double getWait() {
 		return (actualExit - optimumExit);
+	}
+	
+	public void makeStopped() {
+		position = Metrics.WALK_LEFT+20;
+		carStatus = CarStatus.STOP;
+		tempSpeed = 0.0;
 	}
 }

@@ -51,18 +51,18 @@ public class CarList {
     	return right.getFirst();
     }
     
-    public Car findCarAtLightL() {
+    public Car findCarAtLightL(double currentTime) {
     	for(Car c : left) {
-    		if(!c.canMakeLight()) {
+    		if(!c.canMakeLight(currentTime)) {
     			return c;
     		}
     	}
     	return null;
     }
     
-    public Car findCarAtLightR() {
+    public Car findCarAtLightR(double currentTime) {
     	for(Car c : right) {
-    		if(!c.canMakeLight()) {
+    		if(!c.canMakeLight(currentTime)) {
     			return c;
     		}
     	}

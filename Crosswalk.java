@@ -19,6 +19,8 @@ public class Crosswalk {
 	private ArrayList<Integer> pedsAtWalk;
 
 	private Statistics stats;
+	
+	public static Car stopped;
 
 	public Crosswalk(int time, long seed) {
 		random = new Random(seed);
@@ -29,6 +31,9 @@ public class Crosswalk {
 		light = new Light();
 		carAtLightL = null;
 		carAtLightR = null;
+		
+		stopped = new Car(-1, -1);
+		stopped.makeStopped();
 
 		pedsAtWalk = new ArrayList<Integer>();
 		dontWalkTime = 0.0;
@@ -80,20 +85,15 @@ public class Crosswalk {
 		case CAR_REEVALUATE:
 			id = ((CarEvent)event).getId();
 			P.p("Reevaluating car "+id+" at time"+currentTime);
-			if(((carAtLightL == null) || (id != carAtLightL.getId())) && 
-			   ((carAtLightR == null) || (id != carAtLightR.getId()))) {
-				carList.get(id).changeState(currentTime);
-			} else {
-				P.p("Reevaluation rejected; car is at light.");
-			}
+			carList.get(id).changeState(currentTime);
 			break;
 
 		//Spawn a car on the left
 		case CAR_SPAWN_L:			
 			if(currentTime < duration) {
-				P.p("Spawning a car on the left at time "+currentTime);
 
 				id = carList.addCarL(currentTime); //Create a new car
+				P.p("Car "+id+" spawned on the left at time "+currentTime);
 
 				eventList.add(new Event(random.Exponential(0) + currentTime, EventType.CAR_SPAWN_L)); // Have another car come
 			}
@@ -102,8 +102,8 @@ public class Crosswalk {
 			//Spawn a car on the right
 		case CAR_SPAWN_R:
 			if(currentTime < duration) {
-				P.p("Spawning a car on the right at time "+currentTime);
 				id = carList.addCarR(currentTime); //Create a new car
+				P.p("Car "+id+" spawned on the right at time "+currentTime);
 				
 				eventList.add(new Event(random.Exponential(1) + currentTime, EventType.CAR_SPAWN_R)); // Have another car come
 			}
@@ -231,8 +231,8 @@ public class Crosswalk {
 			case YELLOW:
 				
 				//Find the first car from either side that will have to stop
-				carAtLightL = carList.findCarAtLightL();
-				carAtLightR = carList.findCarAtLightR();
+				carAtLightL = carList.findCarAtLightL(currentTime);
+				carAtLightR = carList.findCarAtLightR(currentTime);
 
 				//Tell those cars to react to the light
 				if(carAtLightL != null) {
