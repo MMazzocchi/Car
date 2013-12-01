@@ -37,6 +37,7 @@ public class CarList {
         Car c = new Car(newId, time);
         if(right.size() != 0)
         	c.follow(right.getLast());
+        
         right.add(c);
         ids.put(newId, c);
         return newId;
