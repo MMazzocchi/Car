@@ -53,7 +53,7 @@ public class CarList {
     
     public Car findCarAtLightL() {
     	for(Car c : left) {
-    		if(c.canMakeLight()) {
+    		if(!c.canMakeLight()) {
     			return c;
     		}
     	}
@@ -62,7 +62,7 @@ public class CarList {
     
     public Car findCarAtLightR() {
     	for(Car c : right) {
-    		if(c.canMakeLight()) {
+    		if(!c.canMakeLight()) {
     			return c;
     		}
     	}

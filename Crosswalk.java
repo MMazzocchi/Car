@@ -72,8 +72,10 @@ public class Crosswalk {
 		
 		case CAR_REEVALUATE:
 			id = ((CarEvent)event).getId();
-			if((id != carAtLightL.getId()) && (id != carAtLightR.getId()))
+			if(((carAtLightL == null) || (id != carAtLightL.getId())) && 
+			   ((carAtLightR == null) || (id != carAtLightR.getId()))) {
 				carList.get(id).changeState(currentTime);
+			}
 			break;
 
 		//Spawn a car on the left
@@ -116,22 +118,6 @@ public class Crosswalk {
 				stats.addPed();
 			}
 			break;
-			/*
-        //Process a car arriving at the light
-        case CAR_AT_LIGHT:
-            id = ((CarEvent)event).getId();
-
-            //If the light is green, drive straight through it.
-            if(light.getLightStatus() == Light.LightStatus.GREEN) {
-                eventList.add(carList.get(id).exitEvent(currentTime));
-                stats.addCarWaitTime(carList.get(id).waitTime(currentTime));
-            } else {
-            //If the light is not green, stop here.
-                carList.get(id).startWait(currentTime);
-                carsAtLight.add(id);
-            }
-            break;
-			 */
 
 			//A car has reached the end of the street; it exits the simulation
 		case CAR_EXIT:
@@ -207,11 +193,15 @@ public class Crosswalk {
 			
 			case GREEN:
 				//Signal to the car waiting at the light that it is green
-				if(carAtLightR != null)
+				if(carAtLightR != null) {
 					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
+					carAtLightR = null;
+				}
 				
-				if(carAtLightL != null)
+				if(carAtLightL != null) {
 					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
+					carAtLightL = null;
+				}
 				
 				break;
 			case YELLOW:
