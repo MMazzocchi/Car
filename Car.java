@@ -110,7 +110,14 @@ public class Car {
 
 		if(ahead == null) {
 			carStatus = CarStatus.ACCELERATE;
-			// This is bad
+			double acc_time = (tempSpeed - maxSpeed)/acceleration;
+			if(acc_time == 0) {
+				carStatus = CarStatus.CONSTANT;
+			} else {
+				Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
+				Crosswalk.eventList.add(e);
+			}
+			
 		} else {
 
 			double stopPoint;

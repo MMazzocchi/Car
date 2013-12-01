@@ -22,7 +22,9 @@ public class CarList {
         int newId = id;
         id++;
         Car c = new Car(newId, time);
-        c.follow(left.getLast());
+        if(left.size() != 0)
+        	c.follow(left.getLast());
+        
         left.add(c);
         ids.put(newId, c);
         return newId;
@@ -33,7 +35,9 @@ public class CarList {
         int newId = id;
         id++;
         Car c = new Car(newId, time);
-        c.follow(right.getLast());
+        if(right.size() != 0)
+        	c.follow(right.getLast());
+        
         right.add(c);
         ids.put(newId, c);
         return newId;
