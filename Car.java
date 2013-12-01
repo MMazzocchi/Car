@@ -59,6 +59,27 @@ public class Car {
 
 		return distance;
 	}
+	
+	//Return the speed after maintaining the current strategy for the given time
+	public double strategySpeed(double time) {
+		double speed = 0.0;
+		switch(carStatus){
+		case ACCELERATE:
+			speed = tempSpeed + (acceleration*time);
+			break;
+		case DECELERATE:
+			speed = tempSpeed - (acceleration*time);
+			break;
+		case STOP:
+			speed = 0.0;
+			break;
+		case CONSTANT:
+			speed = tempSpeed;
+			break;
+		}
+
+		return speed;
+	}
 
 	public boolean canMakeLight(){
 		if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
@@ -67,9 +88,9 @@ public class Car {
 		return false;
 	}
 
-
-	public void calcPosition(double currentTime){
+	public void calcCurrentState(double currentTime){
 		position = position + strategyDistance(currentTime - state_time);
+		tempSpeed = strategySpeed(currentTime - state_time);
 	}
 
 	public Event reactToLight(Light.LightStatus lightStatus, double currentTime){
@@ -111,6 +132,7 @@ public class Car {
 		if(xf <= position && vf == 0) {
 			//Stop here.
 			carStatus = CarStatus.STOP;
+			tempSpeed = 0;
 
 		} else if((xf <= position && vf == tempSpeed) || tempSpeed >= maxSpeed) {
 			//If we've reached the speed at the point we wanted, hold this speed.
