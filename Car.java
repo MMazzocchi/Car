@@ -109,6 +109,7 @@ public class Car {
 
 		if(ahead == null) {
 			carStatus = CarStatus.ACCELERATE;
+			// This is bad
 		} else {
 
 			double stopPoint;
