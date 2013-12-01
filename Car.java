@@ -96,7 +96,7 @@ public class Car {
     		
     	case STOP:
     		//The car ahead of us is stopped.
-    		double stopPoint = ahead.getPostion() + Metrics.MINIMUM_STOP;
+    		double stopPoint = ahead.getPostion() - Metrics.MINIMUM_STOP;
     		Event nextEvent = processSpeed(stopPoint, 0, currentTime);
     		return nextEvent;
     		
