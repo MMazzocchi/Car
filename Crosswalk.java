@@ -202,10 +202,10 @@ public class Crosswalk {
 			case GREEN:
 				//Signal to the car waiting at the light that it is green
 				if(carAtLightR != null)
-					carAtLightR.reactToLight(light.getLightStatus());
+					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
 				
 				if(carAtLightL != null)
-					carAtLightL.reactToLight(light.getLightStatus());
+					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
 				
 				break;
 			case YELLOW:
@@ -216,10 +216,10 @@ public class Crosswalk {
 
 				//Tell those cars to react to the light
 				if(carAtLightL != null)
-					carAtLightL.reactToLight(light.getLightStatus());
+					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
 				
 				if(carAtLightR != null)
-					carAtLightR.reactToLight(light.getLightStatus());
+					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
 				
 				break;
 			case RED:
