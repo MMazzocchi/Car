@@ -76,17 +76,15 @@ public class Car {
     	switch(lightStatus){
     		case GREEN:
     			// create event for accelerating
-    			return new CarEvent(currentTime, EventType.CAR_ACCELERATE, id);
+    			return changeState(currentTime);
     		case YELLOW:
     	    	// calculate when it will need to start decelerating
-    			double slowTime = (Metrics.WALK_LEFT /* - distance it takes to stop */ - position)/tempSpeed;
-    	    	// create event for slowing down if it needs to
-    			return new CarEvent(currentTime + slowTime, EventType.CAR_DECELERATE, id);
+    			return processSpeed(Metrics.WALK_LEFT, 0, currentTime);
     	}
     	return null;
     }   
    
-    public Event changeState(CarStatus status, double currentTime){
+    public Event changeState(double currentTime){
     	
     	switch(ahead.carStatus) {
     	case CONSTANT:
@@ -112,7 +110,6 @@ public class Car {
     	case DECELERATE: 
     		// possibly decelerate to a stop
     		// possibly decelerate to a constant speed
-    		
     	}
     	
     	return null;
