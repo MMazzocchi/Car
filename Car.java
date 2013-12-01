@@ -95,9 +95,9 @@ public class Car {
     		// if you wont have to do anything
     		
     	case STOP:
-    		//The car ahead of us is stopped. Process that.
+    		//The car ahead of us is stopped.
     		double stopPoint = ahead.getPostion() + Metrics.MINIMUM_STOP;
-    		Event nextEvent = processStop(stopPoint, currentTime);
+    		Event nextEvent = processSpeed(stopPoint, 0, currentTime);
     		return nextEvent;
     		
     	case ACCELERATE:
@@ -113,38 +113,39 @@ public class Car {
     	return null;
     }
 
-    
-    public Event processStop(double xf, double currentTime) {
-    	if(xf == position) {
+    //Determine the best move if our goal is to:
+    //	- reach xf at the most efficient rate possible
+    //	- have the speed vf once we reach xf
+    public Event processSpeed(double xf, double vf, double currentTime) {
+    	if(xf <= position && vf == 0) {
     		//Stop here.
     		carStatus = CarStatus.STOP;
 
     	} else {
     		//Find acceleration distance
-    		double d_a = (xf-position) - ((((tempSpeed*tempSpeed)/(2*acceleration))+(xf-position))/2);
+    		double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2*acceleration))+(xf-position))/2.0);
     		if(d_a <= 0) {
     			//Don't accelerate; start de-accelerating. Find the time it will take.
     			double d_d = (xf - position) - d_a;
     			double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_d)))/acceleration;
-    			
+
     			//Set status to de-accelerate.
     			carStatus = CarStatus.DECELERATE;
 
     			//Return an event at currentTime + time where we re-evaluate
     			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
-    			
+
     		} else {
     			//Find the time it will take to accelerate this distance
     			double time = (-tempSpeed + Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*d_a)))/acceleration;
 
     			//Set status to accelerate.
     			carStatus = CarStatus.ACCELERATE;
-    			
+
     			//Return an event at currentTime + time where we re-evaluate
     			return new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, id);
     		}
     	}
-
     	return null;
     }
 
