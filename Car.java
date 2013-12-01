@@ -129,7 +129,8 @@ public class Car {
 			Crosswalk.eventList.add(exit);
 			
 			//The car behind us is no longer following us.
-			behind.ahead = null;
+			if(behind != null)
+				behind.ahead = null;
 		} else {
 			
 			//We're still in the simulation. Check if there's anyone ahead of us.
