@@ -67,6 +67,12 @@ public class Car {
     	return false;
     }
     
+    
+    public void calcPosition(double currentTime){
+    	position = position + strategyDistance(currentTime - state_time);
+    }
+    
+    
     public Event reactToLight(Light.LightStatus lightStatus, double currentTime){
     	switch(lightStatus){
     		case GREEN:
