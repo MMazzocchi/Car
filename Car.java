@@ -118,9 +118,8 @@ public class Car {
 			Event exit = exitEvent(currentTime);
 			Crosswalk.eventList.add(exit);
 			
-			//The car behind us is no longer following. Have it reevaluate
+			//The car behind us is no longer following us.
 			behind.ahead = null;
-			behind.changeState(currentTime);
 		} else {
 			
 			//We're still in the simulation. Check if there's anyone ahead of us.
@@ -165,10 +164,10 @@ public class Car {
 				//Get to the safe stopping distance behind that car, going its speed.
 				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 			}
-
-			if(behind != null) {
-				behind.changeState(currentTime);
-			}
+		}
+		
+		if(behind != null) {
+			behind.changeState(currentTime);
 		}
 	}
 
