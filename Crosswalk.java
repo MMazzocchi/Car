@@ -71,7 +71,8 @@ public class Crosswalk {
 		switch(event.getType()) {
 		
 		case CAR_REEVALUATE:
-			
+			id = ((CarEvent)event).getId();
+			carList.get(id).changeState(currentTime);
 			break;
 
 		//Spawn a car on the left

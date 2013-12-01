@@ -107,19 +107,24 @@ public class Car {
 
 	public void changeState(double currentTime){
 
-		double stopPoint;
-		// if you will catch up and have to slow down
-		// 
-		// if you wont have to do anything
-		if(ahead.tempSpeed > maxSpeed){
+		if(ahead == null) {
 			carStatus = CarStatus.ACCELERATE;
 		} else {
-			double extraDist = 0;
-			if(ahead.acceleration > acceleration) {
-				extraDist = ahead.stopDistance() - stopDistance();
+
+			double stopPoint;
+			// if you will catch up and have to slow down
+			// 
+			// if you wont have to do anything
+			if(ahead.tempSpeed > maxSpeed){
+				carStatus = CarStatus.ACCELERATE;
+			} else {
+				double extraDist = 0;
+				if(ahead.acceleration > acceleration) {
+					extraDist = ahead.stopDistance() - stopDistance();
+				}
+				stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
+				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 			}
-			stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
-			processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 		}
 	}
 
@@ -132,9 +137,9 @@ public class Car {
 			carStatus = CarStatus.STOP;
 			tempSpeed = 0;
 
-		} else if((xf <= position && vf == tempSpeed) || tempSpeed >= maxSpeed) {
+		} else if((xf <= position && vf == tempSpeed) || (tempSpeed >= maxSpeed && vf >= maxSpeed)) {
 			//If we've reached the speed at the point we wanted, hold this speed.
-			//If we've reached our max speed, hold this speed.
+			//If we've reached our max speed and we want to go faster, hold this speed.
 			carStatus = CarStatus.CONSTANT;
 
 		} else {

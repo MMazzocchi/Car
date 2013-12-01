@@ -39,6 +39,14 @@ public class CarList {
         return newId;
     }
     
+    public Car getFirstCarL() {
+    	return left.getFirst();
+    }
+    
+    public Car getFirstCarR() {
+    	return right.getFirst();
+    }
+    
     public Car findCarAtLightL() {
     	for(Car c : left) {
     		if(c.canMakeLight()) {
@@ -55,6 +63,10 @@ public class CarList {
     		}
     	}
     	return null;
+    }
+    
+    public Car get(int id) {
+    	return ids.get(id);
     }
     
     public void remove(int id) {
