@@ -74,9 +74,9 @@ public class CarList {
     }
     
     public void remove(int id) {
-    	if(id == ((CarList) right).get(0).getId()){
+    	if(id == right.getFirst().getId()){
     		right.pop();
-    	}else{
+    	}else if(id == left.getFirst().getId()){
     		left.pop();
     	}
     }
