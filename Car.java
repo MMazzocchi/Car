@@ -210,4 +210,8 @@ public class Car {
 	public int getId() {
 		return id;
 	}
+	
+	public double getWait() {
+		return (actualExit - optimumExit);
+	}
 }
