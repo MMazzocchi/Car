@@ -107,36 +107,67 @@ public class Car {
 
 	public void changeState(double currentTime){
 
-		if(ahead == null) {
-			carStatus = CarStatus.ACCELERATE;
-			double acc_time = (tempSpeed - maxSpeed)/acceleration;
-			if(acc_time == 0) {
-				carStatus = CarStatus.CONSTANT;
-			} else {
-				Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
-				Crosswalk.eventList.add(e);
-			}
-			
-		} else {
+		//Recalculate current position and speed
+		calcCurrentState(currentTime);
 
-			double stopPoint;
-			// if you will catch up and have to slow down
-			// 
-			// if you wont have to do anything
-			if(ahead.tempSpeed > maxSpeed){
-				carStatus = CarStatus.ACCELERATE;
+		//Check if we've reached the end of the street
+		if(position >= Metrics.STREET_LENGTH) {
+			
+			//Generate an exit event
+			Event exit = exitEvent(currentTime);
+			Crosswalk.eventList.add(exit);
+			
+			//The car behind us is no longer following. Have it reevaluate
+			behind.ahead = null;
+			behind.changeState(currentTime);
+		} else {
+			
+			//We're still in the simulation. Check if there's anyone ahead of us.
+			if(ahead == null) {
+				//Calculate the time it'll take to get up to max speed
+				double acc_time = (tempSpeed - maxSpeed)/acceleration;
+				if(acc_time >= 0) {
+					//We're already at max speed
+					carStatus = CarStatus.CONSTANT;
+					
+					//Generate an event for when we will probably exit the simulation
+					double exitTime = (Metrics.STREET_LENGTH - position)/tempSpeed;
+					Event e = new CarEvent(currentTime + exitTime, EventType.CAR_REEVALUATE, id);
+					Crosswalk.eventList.add(e);
+					
+				} else {
+					//Start accelerating
+					carStatus = CarStatus.ACCELERATE;
+					
+					//Calculate when we might get out of the simulation (if we keep accelerating)
+					double dist = Metrics.STREET_LENGTH - position;
+					double exitTime = -tempSpeed + (Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*dist))/acceleration);
+					
+					//Take whichever happens first; either we hit max speed or we exit
+					if(exitTime < acc_time)
+						acc_time = exitTime;
+					Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
+					Crosswalk.eventList.add(e);
+				}
+
 			} else {
+				//There is a car ahead of us.
+				double stopPoint;
+				
+				//Calculate a safe stopping distance.
 				double extraDist = 0;
 				if(ahead.acceleration > acceleration) {
 					extraDist = ahead.stopDistance() - stopDistance();
 				}
 				stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
+				
+				//Get to the safe stopping distance behind that car, going its speed.
 				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
 			}
-		}
-		
-		if(behind != null) {
-			behind.changeState(currentTime);
+
+			if(behind != null) {
+				behind.changeState(currentTime);
+			}
 		}
 	}
 
