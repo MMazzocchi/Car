@@ -7,7 +7,7 @@ public class Car {
     private Car ahead;
     private Car behind;
     
-    private double acceleration; // ft/min
+    private double acceleration; // ft/min^2
     private double tempSpeed; // ft/min
     private double maxSpeed; // ft/min
     private double position; // feet
@@ -126,6 +126,8 @@ public class Car {
     		//Stop here.
     		carStatus = CarStatus.STOP;
 
+    	} else if(xf <= position && vf == tempSpeed) { 
+    		carStatus = CarStatus.CONSTANT;
     	} else {
     		//Find acceleration distance
     		double d_a = (xf-position) - (((((tempSpeed*tempSpeed)+(vf*vf))/(2*acceleration))+(xf-position))/2.0);
