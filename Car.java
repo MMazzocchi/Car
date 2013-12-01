@@ -13,6 +13,7 @@ public class Car {
     private double position; // feet
     
     private double arrivalTime;
+    private double state_time;
     private double optimumExit;
     
     public Car(int carId, double arrivalTime) {
@@ -60,7 +61,6 @@ public class Car {
     }
     
     public boolean canMakeLight(){
-    	
     	if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
     		return true;
     	}
