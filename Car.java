@@ -124,6 +124,7 @@ public class Car {
 			ahead = saved;
 			// create event for accelerating
 			changeState(currentTime);
+			break;
 		case YELLOW:
 			P.p("lightStatus is yellow");
 			// calculate when it will need to start decelerating
@@ -135,6 +136,9 @@ public class Car {
 			
 			if(behind != null) 
 				behind.changeState(currentTime);
+			break;
+			default:
+				break;
 		}
 	}   
 
@@ -161,7 +165,7 @@ public class Car {
 				P.p("No one is ahead of " + id);
 				//Calculate the time it'll take to get up to max speed
 				double acc_time = (tempSpeed - maxSpeed)/acceleration;
-				if(acc_time >= 0) {
+				if(acc_time <= 0) {
 					P.p(id + " is already at max speed");
 					//We're already at max speed
 					carStatus = CarStatus.CONSTANT;
@@ -215,6 +219,14 @@ public class Car {
 	//	- have the speed vf once we reach xf
 	public void processSpeed(double xf, double vf, double currentTime) {
 		P.p("In processSpeed");
+		P.p("Current State:");
+		P.p("    Position: "+position);
+		P.p("    Speed: "+tempSpeed);
+		P.p("    Status: "+carStatus);
+		P.p("");
+		P.p("Attempting to reach:");
+		P.p("    Position: "+xf);
+		P.p("    Speed: "+vf);
 		if(xf <= position && vf == 0) {
 			P.p("Stop here");
 			//Stop here.
@@ -277,6 +289,9 @@ public class Car {
 					P.p("DecelPt: "+decelPt);
 					P.p("time: "+time);
 				}
+				
+				if(time < .000001)
+					time = .000001;
 				
 				//Return an event at currentTime + time where we re-evaluate
 				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
