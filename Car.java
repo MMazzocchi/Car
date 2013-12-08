@@ -18,6 +18,8 @@ public class Car {
 	private double optimumExit;
 	private double actualExit;
 	
+	private Event nextEval;
+		
 	public Car(int carId, double arrivalTime) {	
 		
 		id = carId;
@@ -31,13 +33,14 @@ public class Car {
 		position = 0;
 
 		maxSpeed = (maxSpeed * 5280)/60.0;
-		tempSpeed = maxSpeed;
-		
+				
 		acceleration = (Crosswalk.random.Uniform(10)*5.0)+7.0;
 	
 		acceleration = acceleration * 60 * 60;
 //		acceleration = (acceleration * 5280)/(60.0*60.0);
 		optimumExit = this.arrivalTime + (Metrics.STREET_LENGTH/maxSpeed);
+		
+		nextEval = null;
 	}
 
 	public void follow(Car c) {
@@ -103,7 +106,7 @@ public class Car {
 		P.p(id + " can't make light");
 		return false;
 	}
-
+	
 	public void calcCurrentState(double currentTime){
 		position = position + strategyDistance(currentTime - state_time);
 		tempSpeed = strategySpeed(currentTime - state_time);
@@ -121,7 +124,10 @@ public class Car {
 		switch(lightStatus){
 		case GREEN:
 			P.p("lightStatus is green");
-			ahead = saved;
+			if(saved != null && saved.position < Metrics.STREET_LENGTH)
+				ahead = saved;
+			else
+				ahead = null;
 			// create event for accelerating
 			changeState(currentTime);
 			break;
@@ -153,15 +159,30 @@ public class Car {
 			P.p(id + " should be exiting");
 			//Generate an exit event
 			Event exit = exitEvent(currentTime);
-			Crosswalk.eventList.add(exit);
+			newEvalEvent(exit, currentTime);
 			
 			//The car behind us is no longer following us.
 			if(behind != null)
 				behind.ahead = null;
+			
 		} else {
 			
 			//We're still in the simulation. Check if there's anyone ahead of us.
 			if(ahead == null) {
+				P.p("No one is ahead of " + id);
+				
+				//No one is ahead of us. Jump to max speed.
+				carStatus = CarStatus.CONSTANT;
+				tempSpeed = maxSpeed;
+				
+				//Generate an event for when we'll probably exit.
+				double exitTime = (Metrics.STREET_LENGTH - position)/tempSpeed;
+				Event e = new CarEvent(currentTime + exitTime, EventType.CAR_REEVALUATE, id);
+				newEvalEvent(e, currentTime);
+				
+				P.p("Set "+id+" to max speed. Estimated exit at "+(currentTime+exitTime));
+				
+				/*
 				P.p("No one is ahead of " + id);
 				//Calculate the time it'll take to get up to max speed
 				double acc_time = (tempSpeed - maxSpeed)/acceleration;
@@ -191,8 +212,43 @@ public class Car {
 					Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
 					Crosswalk.eventList.add(e);
 				}
+				*/
 
 			} else {
+				P.p("Someone is ahead of " + id);
+				double evalPoint = ahead.position-20.0;
+				if(position >= evalPoint) {
+					P.p(id+" is within minimum following distance.");
+					if(ahead.getState() == CarStatus.STOP) {
+						P.p("Car ahead is stopped.");
+						carStatus = CarStatus.STOP;
+						tempSpeed = 0.0;
+						P.p(id+" has stopped.");
+						newEvalEvent(null, currentTime);
+					} else {
+						P.p("Car ahead has speed "+ahead.tempSpeed);
+						carStatus = CarStatus.CONSTANT;
+						tempSpeed = ahead.tempSpeed;
+						P.p(id+" changed speed to "+tempSpeed);
+						newEvalEvent(null, currentTime);
+					}
+				} else {
+					P.p(id+" is catching up.");
+					tempSpeed = maxSpeed;
+					
+					double evalTime = (ahead.position - position - 20.0)/(tempSpeed - ahead.tempSpeed);
+					if(evalTime >= 0) {
+						Event e = new CarEvent(currentTime + evalTime, EventType.CAR_REEVALUATE, id);
+						newEvalEvent(e, currentTime);
+
+						P.p("Set "+id+" to max speed. Estimated revaluation at "+(currentTime+evalTime));
+					} else {
+						P.p("No point in re-evaluating; we won't catch up.");
+						newEvalEvent(null, currentTime);
+					}
+				}
+				
+				/*
 				P.p("Someone is ahead of " + id);
 				//There is a car ahead of us.
 				double stopPoint;
@@ -206,12 +262,23 @@ public class Car {
 				
 				//Get to the safe stopping distance behind that car, going its speed.
 				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
+				*/
 			}
 		}
 		
 		if(behind != null) {
 			behind.changeState(currentTime);
 		}
+	}
+	
+	public void newEvalEvent(Event e, double currentTime) {
+		if((nextEval != null) && (nextEval.getTime() > currentTime)) {
+			P.p("Removing eval for "+id+" at time "+nextEval.getTime());
+			Crosswalk.eventList.remove(nextEval);
+		}
+		nextEval = e;
+		if(e!= null)
+			Crosswalk.eventList.add(e);
 	}
 
 	//Determine the best move if our goal is to:
