@@ -63,7 +63,7 @@ public class Crosswalk {
 			currentTime = currentEvent.getTime();
 			processEvent(currentEvent);
 			try {
-				Thread.sleep(1000);
+				//Thread.sleep(1000);
 			} catch (Exception e) {
 				P.p("dasdfasdfasdf");
 			}
