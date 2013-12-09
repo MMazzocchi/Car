@@ -4,9 +4,12 @@ import java.util.HashMap;
 public class PedList extends HashMap<Integer, Ped> {
 
     private int id;
+    private Generator gen;
     
-    public PedList() {
+    
+    public PedList(Generator g) {
         super();
+        gen = g;
         id = 0;
     }
     
@@ -14,7 +17,7 @@ public class PedList extends HashMap<Integer, Ped> {
     public int addPedL(double time) {
         int newId = id;
         id++;
-        Ped p = new Ped(newId, Ped.Origin.LEFT);
+        Ped p = new Ped(newId, Ped.Origin.LEFT, gen);
         this.put(newId, p);
         
         Crosswalk.tw.printPedSpawn(time, newId, p.speed, 2);
@@ -26,7 +29,7 @@ public class PedList extends HashMap<Integer, Ped> {
     public int addPedR(double time) {
         int newId = id;
         id++;
-        Ped p = new Ped(newId, Ped.Origin.RIGHT);
+        Ped p = new Ped(newId, Ped.Origin.RIGHT, gen);
         this.put(newId, p);
         
         Crosswalk.tw.printPedSpawn(time, newId, p.speed, 1);

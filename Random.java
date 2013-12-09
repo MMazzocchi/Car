@@ -18,6 +18,11 @@ public class Random {
         return exp;
     }
     
+    public double Exponential(int stream, double lambda) {
+        double exp = -Math.log(Uniform(stream))/lambda;
+        return exp;
+    }
+        
     public boolean Bernoulli(double p, int stream) {
         return Uniform(stream) <= p;
     }

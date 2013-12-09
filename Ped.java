@@ -10,11 +10,11 @@ public class Ped {
     
     private double waitStart;
 
-    public Ped(int pedId, Origin origin) {
+    public Ped(int pedId, Origin origin, Generator gen) {
         id = pedId;
         
         //Calculate the speed of this pedestrian and their current position.
-        speed = (Crosswalk.random.Uniform(6)*7.0)+6.0;
+        speed = gen.getRate();//(Crosswalk.random.Uniform(6)*7.0)+6.0;
         if(origin == Origin.LEFT) {
             position = Metrics.BLOCK_LEFT;
         } else {

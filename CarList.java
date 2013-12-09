@@ -8,9 +8,10 @@ public class CarList {
 	private Deque<Car> right;
 	private Deque<Car> left;
 	private HashMap<Integer, Car> ids;
+	private Generator gen;
 
-	public CarList() {
-		super();
+	public CarList(Generator g) {
+		gen = g;
 		right = new LinkedList<Car>();
 		left = new LinkedList<Car>();
 		ids = new HashMap<Integer, Car>();
@@ -21,7 +22,7 @@ public class CarList {
 	public int addCarL(double time) {
 		int newId = id;
 		id++;
-		Car c = new Car(newId, time);
+		Car c = new Car(newId, time, gen);
 		if(left.size() != 0) {
 			c.follow(left.getLast());
 			left.getLast().changeState(time);
@@ -41,7 +42,7 @@ public class CarList {
 	public int addCarR(double time) {
 		int newId = id;
 		id++;
-		Car c = new Car(newId, time);
+		Car c = new Car(newId, time, gen);
 		if(right.size() != 0) {
 			c.follow(right.getLast());
 			right.getLast().changeState(time);

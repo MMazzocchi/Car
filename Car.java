@@ -22,7 +22,7 @@ public class Car {
 
 	public boolean exited;
 
-	public Car(int carId, double arrivalTime) {	
+	public Car(int carId, double arrivalTime, Generator gen) {	
 
 		id = carId;
 		this.arrivalTime = arrivalTime;
@@ -31,7 +31,7 @@ public class Car {
 		carStatus = CarStatus.CONSTANT;
 
 		// Calculate the speed of this car and it's initial position
-		maxSpeed = (Crosswalk.random.Uniform(5)*10.0)+25.0;
+		maxSpeed = gen.getRate();
 		position = 0;
 
 		maxSpeed = (maxSpeed * 5280)/60.0;

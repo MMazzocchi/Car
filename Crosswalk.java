@@ -9,6 +9,9 @@ public class Crosswalk {
 	public double currentTime;
 
 	public static EventQueue eventList;
+	
+	private Generator carGen;
+	private Generator pedGen;
 	private CarList carList;
 	private PedList pedList;
 
@@ -34,17 +37,18 @@ public class Crosswalk {
 		light = new Light();
 		carAtLightL = null;
 		carAtLightR = null;
-		
-		stopped = new Car(-1, -1);
-		stopped.makeStopped();
 
 		pedsAtWalk = new ArrayList<Integer>();
 		dontWalkTime = 0.0;
 
-		new PedGenerator(p_arr, p_rate);
+		pedGen = new Generator(p_arr, p_rate, 11);
+		carGen = new Generator(c_arr, c_rate, 13);
+
+		stopped = new Car(-1, -1, carGen);
+		stopped.makeStopped();
 		
-		carList = new CarList();
-		pedList = new PedList();
+		carList = new CarList(carGen);
+		pedList = new PedList(pedGen);
 		eventList = new EventQueue();
 
 		//Add events to start off the simulation; one car at each end
