@@ -11,6 +11,9 @@ public class Statistics {
     private Welford carStats;
     private double carWaitMin;
     private double carWaitMax;
+    private Welford carEvents;
+    private double carEventMin;
+    private double carEventMax;
     
     public Statistics() {
         cars = 0;
@@ -18,6 +21,7 @@ public class Statistics {
         duration = 0.0;
         pedStats = new Welford(20);
         carStats = new Welford(20);
+        carEvents = new Welford(0);
     }
     
     public void addCar() {
@@ -55,6 +59,18 @@ public class Statistics {
         carStats.addDataPoint(time);
     }
     
+    public void addCarEventCount(int count) {
+    	if(count < 0) count = 0;
+        if(carEvents.getSize() == 0) {
+            carEventMin = count;
+            carEventMax = count;
+        } else {
+            if(count < carEventMin) carEventMin = count;
+            if(count > carEventMax) carEventMax = count;
+        }
+        carEvents.addDataPoint(count);
+    }
+    
     private void printFile() {
         try {
             PrintWriter pw = new PrintWriter("acwait.dat", "UTF-8");
@@ -74,6 +90,7 @@ public class Statistics {
         System.out.println("OUTPUT "+duration);
         System.out.println("OUTPUT "+pedWaitMin+" "+pedStats.getSampleMean()+" "+Math.sqrt(pedStats.getVariance())+" "+pedWaitMax);
         System.out.println("OUTPUT "+carWaitMin+" "+carStats.getSampleMean()+" "+Math.sqrt(carStats.getVariance())+" "+carWaitMax);
+        System.out.println("OUTPUT "+carEventMin+" "+carEvents.getSampleMean()+" "+Math.sqrt(carEvents.getVariance())+" "+carEventMax);
         
         printFile();
     }

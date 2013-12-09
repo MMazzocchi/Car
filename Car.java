@@ -21,6 +21,8 @@ public class Car {
 	private Event nextEval;
 
 	public boolean exited;
+	
+	public int eventCount;
 
 	public Car(int carId, double arrivalTime, Generator gen) {	
 
@@ -45,6 +47,8 @@ public class Car {
 		nextEval = null;
 
 		exited = false;
+		
+		eventCount = 0;
 	}
 
 	public void follow(Car c) {
@@ -156,6 +160,8 @@ public class Car {
 	}   
 
 	public void changeState(double currentTime){
+		eventCount++;
+		
 		P.p(id + " changing state");
 
 		//Recalculate current position and speed

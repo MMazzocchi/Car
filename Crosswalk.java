@@ -67,11 +67,14 @@ public class Crosswalk {
 
 	public void start() {
 
+		int count = 0;
+		
 		//While the simulation still has time or cars/pedestrians, keep processing events
 		while((carList.size() > 0 && pedList.size() > 0) || currentTime < duration) {
 			Event currentEvent = eventList.poll();
 			currentTime = currentEvent.getTime();
 			processEvent(currentEvent);
+			count++;
 			try {
 				//Thread.sleep(1000);
 			} catch (Exception e) {
@@ -85,6 +88,7 @@ public class Crosswalk {
 		//Print statistics
 		stats.setDuration(currentTime);
 		stats.printStats();
+		System.out.println("OUTPUT "+count);
 	}
 
 	// Process this event
@@ -157,6 +161,7 @@ public class Crosswalk {
 			carList.remove(id, currentTime);
 			Car c = carList.get(id);
 			stats.addCarWaitTime(c.getWait());
+			stats.addCarEventCount(c.eventCount);
 			
 	        Crosswalk.tw.printCarExit(currentTime, id);
 	        

@@ -1,10 +1,9 @@
 
 public class P {
+	
+	public static final boolean DEBUG = false;
+	
 	public static void p(Object o) {
-	//	System.out.println(o);
-	}
-
-	public static void p1(Object o) {
-		System.out.println(o);
+		if(DEBUG) System.out.println(o);
 	}
 }
