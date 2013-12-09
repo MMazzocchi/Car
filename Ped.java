@@ -4,7 +4,7 @@ public class Ped {
     
     private int id;
 
-    private double speed; // ft/min
+    public double speed; // ft/min
     private double position; //feet
     private boolean hasCrossed;
     

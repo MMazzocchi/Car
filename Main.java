@@ -8,7 +8,10 @@ public class Main {
  //           new Crosswalk(Integer.parseInt(args[1]), Integer.parseInt(args[2]));
  //       }
     	
-    	new Crosswalk(1, 1);
+    	new Crosswalk(100, 1,
+    			      "p_arr.txt",  "a_arr.txt",
+    			      "p_rate.txt", "a_rate.txt",
+    			      "trace.dat");
     }
 
 }

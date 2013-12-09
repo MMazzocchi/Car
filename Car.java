@@ -9,7 +9,7 @@ public class Car {
 	private Car saved;
 
 	private double acceleration; // ft/min^2
-	private double tempSpeed; // ft/min
+	public double tempSpeed; // ft/min
 	private double maxSpeed; // ft/min
 	private double position; // feet
 
@@ -17,15 +17,17 @@ public class Car {
 	private double state_time;
 	private double optimumExit;
 	private double actualExit;
-	
+
 	private Event nextEval;
-		
+
+	public boolean exited;
+
 	public Car(int carId, double arrivalTime) {	
-		
+
 		id = carId;
 		this.arrivalTime = arrivalTime;
 		state_time = arrivalTime;
-		
+
 		carStatus = CarStatus.CONSTANT;
 
 		// Calculate the speed of this car and it's initial position
@@ -33,14 +35,16 @@ public class Car {
 		position = 0;
 
 		maxSpeed = (maxSpeed * 5280)/60.0;
-				
+
 		acceleration = (Crosswalk.random.Uniform(10)*5.0)+7.0;
-	
+
 		acceleration = acceleration * 60 * 60;
-//		acceleration = (acceleration * 5280)/(60.0*60.0);
+		//		acceleration = (acceleration * 5280)/(60.0*60.0);
 		optimumExit = this.arrivalTime + (Metrics.STREET_LENGTH/maxSpeed);
-		
+
 		nextEval = null;
+
+		exited = false;
 	}
 
 	public void follow(Car c) {
@@ -73,7 +77,7 @@ public class Car {
 		P.p("Strategy distance being calculated: " + distance);
 		return distance;
 	}
-	
+
 	//Return the speed after maintaining the current strategy for the given time
 	public double strategySpeed(double time) {
 		double speed = 0.0;
@@ -96,9 +100,9 @@ public class Car {
 	}
 
 	public boolean canMakeLight(double currentTime){
-		
+
 		calcCurrentState(currentTime);
-		
+
 		if((position  + strategyDistance(Metrics.WALK_YELLOW))  > (Metrics.WALK_RIGHT + 20.0)){
 			P.p(id + " can make light");
 			return true;
@@ -106,7 +110,7 @@ public class Car {
 		P.p(id + " can't make light");
 		return false;
 	}
-	
+
 	public void calcCurrentState(double currentTime){
 		position = position + strategyDistance(currentTime - state_time);
 		tempSpeed = strategySpeed(currentTime - state_time);
@@ -115,36 +119,39 @@ public class Car {
 	}
 
 	public void reactToLight(Light.LightStatus lightStatus, double currentTime){
-		
+
 		calcCurrentState(currentTime);
-		
+
 		P.p("Current position: "+position);
-		
+
 		P.p("Reacting to lightStatus: " + lightStatus);
 		switch(lightStatus){
 		case GREEN:
 			P.p("lightStatus is green");
-			if(saved != null && saved.position < Metrics.STREET_LENGTH)
+			if(saved != null && !saved.exited) {
 				ahead = saved;
-			else
+				ahead.changeState(currentTime);
+			} else {
 				ahead = null;
+				changeState(currentTime);
+			}
 			// create event for accelerating
-			changeState(currentTime);
+			//			changeState(currentTime);
 			break;
 		case YELLOW:
 			P.p("lightStatus is yellow");
 			// calculate when it will need to start decelerating
-//			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
+			//			processSpeed(Metrics.WALK_LEFT, 0, currentTime);
 
 			saved = ahead;
 			ahead = Crosswalk.stopped;
 			changeState(currentTime);
-			
-			if(behind != null) 
-				behind.changeState(currentTime);
+
+			//			if(behind != null) 
+			//				behind.changeState(currentTime);
 			break;
-			default:
-				break;
+		default:
+			break;
 		}
 	}   
 
@@ -155,33 +162,43 @@ public class Car {
 		calcCurrentState(currentTime);
 
 		//Check if we've reached the end of the street
-		if(position >= Metrics.STREET_LENGTH) {
+		if(position >= Metrics.STREET_LENGTH -.0005) {
 			P.p(id + " should be exiting");
 			//Generate an exit event
 			Event exit = exitEvent(currentTime);
 			newEvalEvent(exit, currentTime);
-			
+
 			//The car behind us is no longer following us.
-			if(behind != null)
-				behind.ahead = null;
-			
+			if(behind != null){
+				if((behind.ahead !=null) && (behind.ahead.id == id)) {
+					behind.ahead = null;
+				}
+				if((behind.saved !=null) && (behind.saved.id == id)) {
+					behind.saved = null;
+				}
+			}
+
+			exited = true;
+
 		} else {
-			
+
 			//We're still in the simulation. Check if there's anyone ahead of us.
 			if(ahead == null) {
 				P.p("No one is ahead of " + id);
-				
+
 				//No one is ahead of us. Jump to max speed.
 				carStatus = CarStatus.CONSTANT;
 				tempSpeed = maxSpeed;
-				
+
+				Crosswalk.tw.printCarSpeedChange(currentTime, id, tempSpeed);
+
 				//Generate an event for when we'll probably exit.
 				double exitTime = (Metrics.STREET_LENGTH - position)/tempSpeed;
 				Event e = new CarEvent(currentTime + exitTime, EventType.CAR_REEVALUATE, id);
 				newEvalEvent(e, currentTime);
-				
+
 				P.p("Set "+id+" to max speed. Estimated exit at "+(currentTime+exitTime));
-				
+
 				/*
 				P.p("No one is ahead of " + id);
 				//Calculate the time it'll take to get up to max speed
@@ -190,52 +207,61 @@ public class Car {
 					P.p(id + " is already at max speed");
 					//We're already at max speed
 					carStatus = CarStatus.CONSTANT;
-					
+
 					//Generate an event for when we will probably exit the simulation
 					double exitTime = (Metrics.STREET_LENGTH - position)/tempSpeed;
 					Event e = new CarEvent(currentTime + exitTime, EventType.CAR_REEVALUATE, id);
 					Crosswalk.eventList.add(e);
-					
+
 				} else {
 					P.p(id + "is accelerating");
 					//Start accelerating
 					carStatus = CarStatus.ACCELERATE;
-					
+
 					//Calculate when we might get out of the simulation (if we keep accelerating)
 					double dist = Metrics.STREET_LENGTH - position;
 					double exitTime = -tempSpeed + (Math.sqrt((tempSpeed*tempSpeed)+(2*acceleration*dist))/acceleration);
-					
+
 					//Take whichever happens first; either we hit max speed or we exit
 					if(exitTime < acc_time)
 						acc_time = exitTime;
-					
+
 					Event e = new CarEvent(currentTime + acc_time, EventType.CAR_REEVALUATE, id);
 					Crosswalk.eventList.add(e);
 				}
-				*/
+				 */
 
 			} else {
-				P.p("Someone is ahead of " + id);
-				double evalPoint = ahead.position-20.0;
-				if(position >= evalPoint) {
+				P.p("Car "+ahead.id+" is "+(ahead.position-position)+" ft ahead of "+id+" going "+ahead.tempSpeed);
+				double evalPoint = ahead.position - 20.0;
+				if(position >= evalPoint - 0.0005) {
 					P.p(id+" is within minimum following distance.");
 					if(ahead.getState() == CarStatus.STOP) {
 						P.p("Car ahead is stopped.");
 						carStatus = CarStatus.STOP;
 						tempSpeed = 0.0;
+
+						Crosswalk.tw.printCarSpeedChange(currentTime, id, tempSpeed);
+
 						P.p(id+" has stopped.");
 						newEvalEvent(null, currentTime);
 					} else {
 						P.p("Car ahead has speed "+ahead.tempSpeed);
 						carStatus = CarStatus.CONSTANT;
 						tempSpeed = ahead.tempSpeed;
+
+						Crosswalk.tw.printCarSpeedChange(currentTime, id, tempSpeed);
+
 						P.p(id+" changed speed to "+tempSpeed);
 						newEvalEvent(null, currentTime);
 					}
 				} else {
 					P.p(id+" is catching up.");
 					tempSpeed = maxSpeed;
-					
+					carStatus = CarStatus.CONSTANT;
+
+					Crosswalk.tw.printCarSpeedChange(currentTime, id, tempSpeed);
+
 					double evalTime = (ahead.position - position - 20.0)/(tempSpeed - ahead.tempSpeed);
 					if(evalTime >= 0) {
 						Event e = new CarEvent(currentTime + evalTime, EventType.CAR_REEVALUATE, id);
@@ -247,30 +273,30 @@ public class Car {
 						newEvalEvent(null, currentTime);
 					}
 				}
-				
+
 				/*
 				P.p("Someone is ahead of " + id);
 				//There is a car ahead of us.
 				double stopPoint;
-				
+
 				//Calculate a safe stopping distance.
 				double extraDist = 0;
 				if(ahead.acceleration > acceleration) {
 					extraDist = ahead.stopDistance() - stopDistance();
 				}
 				stopPoint = ahead.getPostion() - (Metrics.MINIMUM_STOP + extraDist);
-				
+
 				//Get to the safe stopping distance behind that car, going its speed.
 				processSpeed(stopPoint, ahead.tempSpeed, currentTime);
-				*/
+				 */
 			}
 		}
-		
+
 		if(behind != null) {
 			behind.changeState(currentTime);
 		}
 	}
-	
+
 	public void newEvalEvent(Event e, double currentTime) {
 		if((nextEval != null) && (nextEval.getTime() > currentTime)) {
 			P.p("Removing eval for "+id+" at time "+nextEval.getTime());
@@ -313,8 +339,8 @@ public class Car {
 			double vi_2 = tempSpeed*tempSpeed;
 			double a = acceleration;
 			double d_a = (((vf_2 - vi_2)/(2.0*a))+d_tot)/2.0;
-			
-			
+
+
 			P.p("Acceleration distance: "+d_a);
 			if(d_a <= 0) {
 				//Don't accelerate; start de-accelerating. Find the time it will take.
@@ -325,7 +351,7 @@ public class Car {
 				//Set status to de-accelerate.
 				carStatus = CarStatus.DECELERATE;
 				P.p("Decelerating");
-				
+
 				P.p("Time til stop: "+ time);
 
 				//Return an event at currentTime + time where we re-evaluate
@@ -356,10 +382,10 @@ public class Car {
 					P.p("DecelPt: "+decelPt);
 					P.p("time: "+time);
 				}
-				
+
 				if(time < .000001)
 					time = .000001;
-				
+
 				//Return an event at currentTime + time where we re-evaluate
 				Event e = new CarEvent(currentTime + time, EventType.CAR_REEVALUATE, getId());
 				Crosswalk.eventList.add(e);
@@ -391,11 +417,11 @@ public class Car {
 	public CarStatus getState() {
 		return carStatus;
 	}
-	
+
 	public double getWait() {
 		return (actualExit - optimumExit);
 	}
-	
+
 	public void makeStopped() {
 		position = Metrics.WALK_LEFT+20;
 		carStatus = CarStatus.STOP;

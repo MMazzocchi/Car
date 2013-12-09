@@ -44,6 +44,7 @@ public class Statistics {
     }
     
     public void addCarWaitTime(double time) {
+    	if(time < 0) time = 0;
         if(carStats.getSize() == 0) {
             carWaitMin = time;
             carWaitMax = time;

@@ -21,8 +21,11 @@ public class Crosswalk {
 	private Statistics stats;
 	
 	public static Car stopped;
+	
+	public static TraceWriter tw;
 
-	public Crosswalk(int time, long seed) {
+	public Crosswalk(int time, long seed, String p_arr, String c_arr,
+			String p_rate, String c_rate, String trace) {
 		random = new Random(seed);
 
 		currentTime = 0.0;
@@ -38,6 +41,8 @@ public class Crosswalk {
 		pedsAtWalk = new ArrayList<Integer>();
 		dontWalkTime = 0.0;
 
+		new PedGenerator(p_arr, p_rate);
+		
 		carList = new CarList();
 		pedList = new PedList();
 		eventList = new EventQueue();
@@ -51,6 +56,7 @@ public class Crosswalk {
 		eventList.add(new Event(random.Exponential(3), EventType.PED_SPAWN_R));
 
 		stats = new Statistics();
+		tw = new TraceWriter(trace);
 
 		this.start();
 	}
@@ -68,7 +74,10 @@ public class Crosswalk {
 				P.p("dasdfasdfasdf");
 			}
 		}
-
+		
+		tw.printEnd(currentTime);
+		tw.closeFile();
+		
 		//Print statistics
 		stats.setDuration(currentTime);
 		stats.printStats();
@@ -96,6 +105,7 @@ public class Crosswalk {
 				P.p("Car "+id+" spawned on the left at time "+currentTime);
 
 				eventList.add(new Event(random.Exponential(0) + currentTime, EventType.CAR_SPAWN_L)); // Have another car come
+				stats.addCar();
 			}
 			break;
 
@@ -106,26 +116,27 @@ public class Crosswalk {
 				P.p("Car "+id+" spawned on the right at time "+currentTime);
 				
 				eventList.add(new Event(random.Exponential(1) + currentTime, EventType.CAR_SPAWN_R)); // Have another car come
+				stats.addCar();
 			}
 			break;
 
 			//Spawn a pedestrian on the left
 		case PED_SPAWN_L:
 			if(currentTime < duration) {
-				id = pedList.addPedL(); // Create pedestrian
+				id = pedList.addPedL(currentTime); // Create pedestrian
 				P.p("Ped "+id+" spawned on left at "+currentTime);
 
 				eventList.add(pedList.get(id).crossArrival(currentTime)); //Add an event for when they arrive at the crosswalk
 
 				eventList.add(new Event(random.Exponential(2) + currentTime, EventType.PED_SPAWN_L)); // Have another pedestrian enter
+				stats.addPed();				
 			}
-			stats.addPed();
 			break;
 
 			//Spawn a pedestrian on the right
 		case PED_SPAWN_R:
 			if(currentTime < duration) {
-				id = pedList.addPedR(); // Create Pedestrian
+				id = pedList.addPedR(currentTime); // Create Pedestrian
 				P.p("Ped "+id+" spawned on right at "+currentTime);
 
 				eventList.add(pedList.get(id).crossArrival(currentTime)); //Add an event for when they arrive at the crosswalk
@@ -139,26 +150,41 @@ public class Crosswalk {
 		case CAR_EXIT:
 			id = ((CarEvent)event).getId();
 			P.p("Car "+id+" exited at "+currentTime);
-			carList.remove(id);
+			carList.remove(id, currentTime);
+			Car c = carList.get(id);
+			stats.addCarWaitTime(c.getWait());
+			
+	        Crosswalk.tw.printCarExit(currentTime, id);
+	        
 			break;
 
 			//Process a pedestrian arriving at the light
 		case PED_AT_WALK:
 			id = ((PedEvent)event).getId();
 			P.p("Ped "+id+" arrived at walk at "+currentTime);
+			
+	        Crosswalk.tw.printPedSpeedChange(currentTime, id, 0.0);
 
 			//If the "Walk" sign is showing, attempt to cross the street (this could fail, since we might not have enough time)
 			if(light.getWalkStatus() == Light.WalkStatus.WALK) {
 				Event newEvent = pedList.get(id).exitEvent(currentTime, dontWalkTime);
 				if(newEvent != null) {
-					P.p("Ped "+id+" began crossing.");
+					P.p("Ped "+id+" began crossing right away.");
 					eventList.add(newEvent);
+					
+			        Crosswalk.tw.printPedStartCross(currentTime, id);
+				} else {
+					pedsAtWalk.add(id);
+					pedList.get(id).startWait(currentTime);
+					P.p("Ped "+id+" couldn't make it, decided to wait.");
 				}
 			} else {
 				//If the "Don't Walk" sign is showing, decide whether or not to press the button.
 				pedsAtWalk.add(id);
 				pedList.get(id).startWait(currentTime);
 
+				P.p("Ped "+id+" began waiting.");
+				
 				//Calculate the probability of pressing the button.
 				int pedCount = pedsAtWalk.size();
 				double p;
@@ -185,6 +211,8 @@ public class Crosswalk {
 			P.p("Ped "+id+" exited the simulation.");
 			stats.addPedWaitTime(pedList.get(id).waitTime(currentTime));
 			pedList.remove(id);
+			
+	        Crosswalk.tw.printPedExit(currentTime, id);
 			break;
 
 			//Process an attempted button press.
@@ -210,22 +238,24 @@ public class Crosswalk {
 			if(newEvent != null) {
 				eventList.add(newEvent);
 			}
-
+		
 			switch(light.getLightStatus()) {
 			
 			case GREEN:
 				//Signal to the car waiting at the light that it is green
 				if(carAtLightR != null) {
-					P.p("Telling the car waiting on the right to react to the green.");
+					P.p("Telling the car "+carAtLightR.getId()+" on right to react to the green.");
 					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
 					carAtLightR = null;
 				}
 				
 				if(carAtLightL != null) {
-					P.p("Telling the car waiting on the left to react to the green.");
+					P.p("Telling the car "+carAtLightL.getId()+" on the left to react to the green.");
 					carAtLightL.reactToLight(light.getLightStatus(), event.getTime());
 					carAtLightL = null;
 				}
+				
+		        Crosswalk.tw.printLightChange(currentTime, 3);
 				
 				break;
 			case YELLOW:
@@ -244,7 +274,9 @@ public class Crosswalk {
 					P.p("Found car on right "+carAtLightR.getId()+", telling it to react to the yellow.");
 					carAtLightR.reactToLight(light.getLightStatus(), event.getTime());
 				}
-					
+				
+		        Crosswalk.tw.printLightChange(currentTime, 2);
+				
 				break;
 			case RED:
 				P.p("Telling all the pedestrians to walk at time "+currentTime);
@@ -258,9 +290,17 @@ public class Crosswalk {
 						//If this pedestrian made it across the crosswalk, add an event for their exit and remove them.
 						eventList.add(newEvent);
 						pedsAtWalk.remove(i);
+						P.p("Ped "+pedId+" walked.");
 						i--;
+						
+				        Crosswalk.tw.printPedStartCross(currentTime, pedId);
+					} else {
+						P.p("Ped "+pedId+" didn't walk.");
 					}
 				}
+				
+		        Crosswalk.tw.printLightChange(currentTime, 1);
+
 				break;
 			}
 
